@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Muskan Fashion - Command Center</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ffc734">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -12,36 +20,39 @@
             --accent: #ffc734; 
             --green: #27ae60; 
         }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; overflow: hidden; }
+        /* Changed overflow:hidden to overflow-x:hidden to allow safe vertical scrolling on tiny phones */
+        body, html { margin: 0; padding: 0; min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
-        /* HUB SCREEN */
-        #hub { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; transition: 0.5s; }
+        /* HUB SCREEN: Updated to center content properly on all screens */
+        #hub { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; transition: 0.5s; }
         
-        /* LOGO SECTION */
-        .logo-container { width: 450px; margin-bottom: 40px; }
+        /* LOGO: Now scales based on screen width */
+        .logo-container { width: 95%; max-width: 450px; margin-bottom: 40px; }
         .logo-container svg { width: 100%; height: auto; }
 
-        .btn-grid { display: flex; gap: 30px; }
+        /* BUTTONS: Now stack vertically on mobile automatically */
+        .btn-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%; }
+        
         .launch-btn {
-            width: 280px; height: 220px; background: white; border: 2px solid var(--dark);
+            /* Width 100% for mobile, limited to 280px for larger screens */
+            width: 100%; max-width: 280px; height: 180px; background: white; border: 2px solid var(--dark);
             border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
         }
-        .launch-btn:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--accent); }
-        .launch-btn span { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-top: 15px; color: var(--dark); }
-        .stock-btn { border-bottom: 12px solid var(--green); }
-        .mfg-btn { border-bottom: 12px solid var(--accent); }
+        .launch-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: var(--accent); }
+        .launch-btn span { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-top: 15px; color: var(--dark); }
+        .stock-btn { border-bottom: 10px solid var(--green); }
+        .mfg-btn { border-bottom: 10px solid var(--accent); }
 
-        /* APP VIEWPORT */
-        #app-view { display: none; width: 100%; height: 100%; position: relative; background: white; }
+        /* APP VIEWPORT: Full-screen display for sub-apps */
+        #app-view { display: none; width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; background: white; }
         .nav-bar { 
             height: 50px; background: var(--dark); color: white; display: flex; 
-            align-items: center; padding: 0 20px; justify-content: space-between;
+            align-items: center; padding: 0 15px; justify-content: space-between;
         }
-        .back-btn { background: #444; border: none; color: white; padding: 8px 18px; border-radius: 4px; font-weight: 800; cursor: pointer; font-size: 12px; text-transform: uppercase; }
-        .back-btn:hover { background: var(--accent); color: var(--dark); }
-        iframe { width: 100%; height: calc(100% - 50px); border: none; }
+        .back-btn { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 4px; font-weight: 800; cursor: pointer; font-size: 11px; }
+        iframe { width: 100%; height: calc(100% - 50px); border: none; display: block; }
     </style>
 </head>
 <body>
@@ -92,13 +103,20 @@
 </div>
 
 <script>
-    function openApp(mode) {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Muskan App Registered"));
+    });
+  }
+function openApp(mode) {
         document.getElementById('hub').style.display = 'none';
         document.getElementById('app-view').style.display = 'block';
         document.getElementById('app-name').innerText = mode === 'STOCK' ? 'Office Stock Ledger' : 'NTM Manufacturing Unit';
         const frame = document.getElementById('app-frame');
         frame.src = mode === 'STOCK' ? 'Muskan_Office.html' : 'Muskan_Unit.html';
     }
+
 </script>
 
 </body>
