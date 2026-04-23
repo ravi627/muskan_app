@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manufacturing - NTM Unit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-cream: #F0EAE1; --text-charcoal: #333333; --ntm-green: #27ae60; --house-red: #e74c3c; --accent: #A67C52; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-cream); color: var(--text-charcoal); margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: 0 auto; position: relative; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .balance-card { background: var(--text-charcoal); color: white; padding: 30px 20px; text-align: center; border-radius: 8px; border-bottom: 5px solid var(--accent); cursor: pointer; }
+        .count { font-size: 45px; font-weight: 800; display: block; }
+        .summary-trigger { background: var(--accent); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 11px; cursor: pointer; margin: 10px 0 20px 0; text-transform: uppercase; }
+        .form-box { background: #fff; padding: 20px; border: 2px solid #333; border-radius: 8px; display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; position: relative; }
+        .input-group { display: flex; flex-direction: column; position: relative; }
+        label { font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; color: #888; }
+        input { padding: 12px; border: 2px solid #ddd; font-size: 15px; font-weight: 700; border-radius: 4px; outline: none; background: #fff; }
+        #suggestionBox { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #333; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
+        .suggest-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .btn { padding: 18px; border: none; color: white; font-weight: 800; cursor: pointer; text-transform: uppercase; border-radius: 6px; }
+        .dispatch-bag { background: #fff9f0; border: 2px dashed var(--accent); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .bag-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; font-size: 13px; font-weight: 700; }
+        #receiptModal, #inventoryModal, #settingsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        #inventoryModal, #settingsModal { background: white; align-items: flex-start; overflow-y: auto; }
+        .receipt-card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 2px; }
+        @media print {
+            @page { size: A5; margin: 0; }
+            body { background: white; padding: 0; }
+            .container, .no-print, .header, .balance-card, .summary-trigger, .form-box, .log-box, .dispatch-bag, .sync-indicator { display: none !important; }
+            #receiptModal { position: absolute; top: 0; left: 0; width: 100%; height: auto; background: white; display: block !important; }
+            .receipt-card { box-shadow: none; border: none; max-width: 100%; padding-top: 3in !important; margin: 0 auto; min-height: 100vh; position: relative; }
+            .receipt-footer-note { position: absolute; bottom: 40px; left: 30px; right: 30px; border-top: 1px solid #eee; padding-top: 10px; }
+            .screen-only-header { display: none !important; } 
+        }
+        .log-box { background: #fff; border: 2px solid #333; border-radius: 8px; padding: 15px; }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .reprint-btn { font-size: 9px; padding: 4px 8px; background: #eee; border: 1px solid #ccc; cursor: pointer; font-weight: 800; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div id="settingsModal">
+    <div style="width:100%; max-width:500px; padding: 20px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:10px; margin-bottom:20px;">
+            <h2 style="font-family:'Playfair Display'; margin:0;">APP SETTINGS</h2>
+            <button onclick="closeSettings()" style="background:none; border:none; font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        <div class="input-group" style="margin-bottom:15px;"><label>Cloud URL</label><input type="text" id="setCloudUrl"></div>
+        <div class="input-group" style="margin-bottom:15px;"><label>WhatsApp (91...)</label><input type="text" id="setWaNum"></div>
+        <button class="btn" style="background:var(--ntm-green); width:100%;" onclick="saveSettings()">SAVE & REFRESH</button>
+    </div>
+</div>
+
+<div id="receiptModal">
+    <div class="receipt-card" id="receiptContent">
+        <div class="receipt-header screen-only-header" style="border-bottom: 2px dashed #333; text-align: center; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="font-family:'Playfair Display'; margin:0;">MUSKAN</h2>
+            <small>NTM UNIT DISPATCH</small>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6;">
+            <div style="display:flex; justify-content:space-between;"><span>Challan:</span><b id="rChallan"></b></div>
+            <div style="display:flex; justify-content:space-between;"><span>Date:</span><b id="rDate"></b></div>
+            <hr style="border-top:1px solid #eee; margin:10px 0;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+                <thead style="font-size:10px; color:#888;"><tr><th align="left">DESIGN</th><th align="right">QTY</th></tr></thead>
+                <tbody id="rItemsList" style="font-weight:700;"></tbody>
+            </table>
+            <div style="display:flex; justify-content:space-between; font-size: 18px; border-top: 2px solid #333; padding-top: 10px;">
+                <span>Total Pcs:</span><b id="rTotalQty"></b>
+            </div>
+            <div class="receipt-footer-note" id="rNoteContainer" style="margin-top: 30px; font-style: italic; color: #555;">
+                <span id="rNoteLabel" style="font-weight: 800; font-size: 10px; text-transform: uppercase;">Remarks:</span><br>
+                <span id="rNoteText"></span>
+            </div>
+        </div>
+        <div class="no-print" style="margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button onclick="window.print()" style="padding:12px; background:var(--ntm-green); color:white; border:none; font-weight:800; border-radius:4px;">PRINT / PDF</button>
+            <button onclick="closeReceipt()" style="padding:12px; background:#333; color:white; border:none; font-weight:800; border-radius:4px;">CLOSE</button>
+        </div>
+    </div>
+</div>
+
+<div id="inventoryModal">
+    <div style="width:100%; max-width:600px; padding: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:10px;">
+            <h2 style="font-family:'Playfair Display'; margin:0;">NTM INVENTORY</h2>
+            <button onclick="closeInventory()" style="background:none; border:none; font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-top:20px;"><tbody id="inventoryList"></tbody></table>
+    </div>
+</div>
+
+<div class="container">
+    <div class="sync-indicator" id="syncStatusBox" style="background: #333; color: white; padding: 10px 20px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700;">
+        <span id="syncTag">☁️ Cloud Status: Ready</span>
+        <button class="reprint-btn" style="background: var(--accent); color: white; border: none; padding: 4px 12px; cursor: pointer; border-radius: 3px;" onclick="syncDown()">Fetch from Sheet</button>
+    </div>
+
+    <div class="header">
+        <h1 style="font-family:'Playfair Display'; margin:0;">MANUFACTURING</h1>
+        <p style="font-size: 9px; font-weight:800; letter-spacing: 3px; margin:5px 0;">NTM UNIT STOCK</p>
+    </div>
+    <div class="balance-card" onclick="openSettings()"><span class="count" id="totalBalance">0</span><p style="font-size: 9px; letter-spacing: 2px; margin-top:10px;">TOTAL PCS AT NTM</p></div>
+    <button class="summary-trigger" onclick="openInventory()">📊 View Full Stock Summary</button>
+
+    <div class="form-box">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Challan No</label><input type="text" id="challanNo" readonly></div>
+            <div class="input-group"><label>Date</label><input type="date" id="entryDate"></div>
+        </div>
+        <div class="input-group">
+            <label>Design No</label>
+            <input type="text" id="designNo" autocomplete="off" oninput="showSuggestions(this.value)">
+            <div id="suggestionBox"></div>
+        </div>
+        <div class="input-group"><label>Quantity</label><input type="number" id="qtyInput"></div>
+        
+        <div class="input-group"><label>Note / Remarks</label><input type="text" id="uniNote" placeholder="Enter special instructions..."></div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button class="btn" style="background:var(--ntm-green);" onclick="handleAction('READY')">Ready at NTM</button>
+            <button class="btn" style="background:var(--accent);" onclick="addToBag()">+ Add to Dispatch</button>
+        </div>
+    </div>
+
+    <div class="dispatch-bag" id="dispatchBag">
+        <label style="color:var(--accent); font-size:10px;">📦 DISPATCH BAG (PENDING CHALLAN)</label>
+        <div id="bagItems"></div>
+        <button class="btn" style="background:var(--house-red); width:100%; margin-top:15px;" onclick="handleAction('SENT')">Finalize & Sent to House</button>
+    </div>
+
+    <div class="log-box">
+        <div style="font-size: 11px; font-weight:800; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">RECENT MOVEMENT</div>
+        <div id="logItems"></div>
+    </div>
+</div>
+
+<script>
+    let mfgData = JSON.parse(localStorage.getItem('mfg_test_v1')) || [];
+    let nextNM = 101; 
+    let currentBag = [];
+    let hubConfig = JSON.parse(localStorage.getItem('msk_v13_config')) || { cloudUrl: "" };
+
+    function openSettings() {
+        document.getElementById('setCloudUrl').value = hubConfig.cloudUrl;
+        document.getElementById('setWaNum').value = localStorage.getItem('muskan_wa_num') || "";
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+    function saveSettings() {
+        hubConfig.cloudUrl = document.getElementById('setCloudUrl').value;
+        localStorage.setItem('msk_v13_config', JSON.stringify(hubConfig));
+        localStorage.setItem('muskan_wa_num', document.getElementById('setWaNum').value);
+        alert("Saved!"); location.reload();
+    }
+
+    async function syncDown() {
+        if (!hubConfig.cloudUrl) return;
+        const tag = document.getElementById('syncTag');
+        tag.innerText = "⏳ Fetching Sheet...";
+        try {
+            const response = await fetch(hubConfig.cloudUrl + "?action=GET_MFG");
+            const data = await response.json();
+            if (data && data.logs) {
+                mfgData = data.logs;
+                localStorage.setItem('mfg_test_v1', JSON.stringify(mfgData));
+                const sentLogs = mfgData.filter(l => l.type === 'SENT' && l.challan.startsWith("NM-"));
+                if(sentLogs.length > 0) {
+                    const nums = sentLogs.map(l => parseInt(l.challan.replace("NM-", "")));
+                    nextNM = Math.max(...nums) + 1;
+                } else { nextNM = 101; }
+                render();
+                tag.innerText = "✅ Sheet Data Loaded";
+            }
+        } catch (e) { tag.innerText = "❌ Sync Failed"; }
+    }
+
+    function getDesignBalances() {
+        let b = {}; mfgData.forEach(i => { if(!b[i.design]) b[i.design]=0; b[i.design]+=(i.type==='READY'?i.qty:-i.qty); }); 
+        currentBag.forEach(item => { b[item.design] -= item.qty; });
+        return b;
+    }
+
+    function showSuggestions(val) {
+        const box = document.getElementById('suggestionBox');
+        if(!val) { box.style.display='none'; return; }
+        const b = getDesignBalances();
+        const m = Object.keys(b).filter(d => d.includes(val.toUpperCase()));
+        if(m.length>0) {
+            box.innerHTML = ''; m.forEach(d => {
+                const i = document.createElement('div'); i.className='suggest-item';
+                i.innerHTML = `<b>${d}</b><span style="color:var(--ntm-green); font-size:11px;">Avail: ${b[d]}</span>`;
+                i.onclick = () => { document.getElementById('designNo').value=d; box.style.display='none'; };
+                box.appendChild(i);
+            }); box.style.display='block';
+        } else box.style.display='none';
+    }
+
+    function addToBag() {
+        const design = document.getElementById('designNo').value.trim().toUpperCase();
+        const qty = parseInt(document.getElementById('qtyInput').value);
+        const note = document.getElementById('uniNote').value.trim();
+        if(!design || !qty || qty <= 0) return alert("Enter Design and Qty");
+        const b = getDesignBalances();
+        if(qty > (b[design] || 0)) return alert(`❌ Shortage! Only ${b[design] || 0} left.`);
+        
+        currentBag.push({ design, qty, note }); 
+        document.getElementById('designNo').value = '';
+        document.getElementById('qtyInput').value = '';
+        renderBag();
+    }
+
+    function renderBag() {
+        const bagDiv = document.getElementById('dispatchBag');
+        const itemsDiv = document.getElementById('bagItems');
+        if(currentBag.length === 0) { bagDiv.style.display = 'none'; return; }
+        bagDiv.style.display = 'block';
+        itemsDiv.innerHTML = currentBag.map((item, idx) => `
+            <div class="bag-item"><span>${item.design} (x${item.qty})</span><span><button onclick="removeFromBag(${idx})" style="background:none; border:none; color:red; margin-left:10px;">✕</button></span></div>
+        `).join('');
+    }
+
+    function removeFromBag(idx) { currentBag.splice(idx, 1); renderBag(); }
+
+    function handleAction(type) {
+        const dateInput = document.getElementById('entryDate').value;
+        // FIX 1: Lock the date as a clean string immediately
+        const cleanDateStr = dateInput.split('T')[0];
+        
+        const currentNote = document.getElementById('uniNote').value.trim();
+        const challan = "NM-" + nextNM;
+
+        if (type === 'READY') {
+            const design = document.getElementById('designNo').value.trim().toUpperCase();
+            const qty = parseInt(document.getElementById('qtyInput').value);
+            if (!dateInput || !design || !qty || qty <= 0) return alert("Fill all fields!");
+            mfgData.unshift({ id: Date.now(), date: cleanDateStr, design, qty, type, challan: 'UNIT-IN', note: currentNote });
+            document.getElementById('designNo').value = '';
+            document.getElementById('qtyInput').value = '';
+            document.getElementById('uniNote').value = '';
+        } else {
+            if (currentBag.length === 0) return alert("Bag is empty!");
+            let totalQty = 0; let listHtml = "";
+            const waTarget = localStorage.getItem('muskan_wa_num') || "91";
+            
+            // FIX 2: Format date for WhatsApp and Receipt
+            const displayDate = cleanDateStr.split('-').reverse().join('-');
+            let waMsg = `*MUSKAN FASHION: DISPATCH*%0A----------------------------%0A*Challan:* ${challan}%0A*Date:* ${displayDate}%0A----------------------------%0A*Details:*%0A`;
+            
+            currentBag.forEach(item => {
+                mfgData.unshift({ id: Date.now(), date: cleanDateStr, design: item.design, qty: item.qty, type: 'SENT', challan, note: currentNote });
+                totalQty += item.qty;
+                listHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #eee;">${item.design}</td><td align="right" style="padding:5px 0; border-bottom:1px solid #eee;">${item.qty}</td></tr>`;
+                waMsg += `• ${item.design}: ${item.qty} Pcs%0A`;
+            });
+            
+            waMsg += `----------------------------%0A*TOTAL:* *${totalQty} Pcs*%0A----------------------------`;
+            if(currentNote) waMsg += `%0A%0A*Note:* ${currentNote}`;
+
+            document.getElementById('rChallan').innerText = challan.replace("NM-", ""); // Number only as requested
+            document.getElementById('rDate').innerText = displayDate;
+            document.getElementById('rItemsList').innerHTML = listHtml;
+            document.getElementById('rTotalQty').innerText = totalQty + " Pcs";
+            
+            if(currentNote) {
+                document.getElementById('rNoteContainer').style.display = 'block';
+                document.getElementById('rNoteText').innerText = currentNote;
+            } else {
+                document.getElementById('rNoteContainer').style.display = 'none';
+            }
+
+            document.getElementById('receiptModal').style.display = 'flex';
+            window.open(`https://wa.me/${waTarget}?text=${waMsg}`, '_blank');
+            currentBag = [];
+            document.getElementById('uniNote').value = '';
+            renderBag();
+            nextNM++;
+        }
+        localStorage.setItem('mfg_test_v1', JSON.stringify(mfgData));
+        render();
+        syncToCloud(); 
+    }
+
+    async function syncToCloud() {
+        if (!hubConfig.cloudUrl) return;
+        // FIX 3: Clean dates in the export map to ensure they hit the sheet as text strings
+        const cleanedLogs = mfgData.map(i => ({
+            ...i,
+            date: i.date.toString().split('T')[0]
+        }));
+        
+        try {
+            await fetch(hubConfig.cloudUrl, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: "SYNC_MFG", logs: cleanedLogs }) 
+            });
+        } catch (e) { }
+    }
+
+    function reprintReceipt(challan) {
+        const entries = mfgData.filter(i => i.challan === challan);
+        if(entries.length === 0) return;
+        let total = 0; let listHtml = "";
+        entries.forEach(item => {
+            total += item.qty;
+            listHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #eee;">${item.design}</td><td align="right" style="padding:5px 0; border-bottom:1px solid #eee;">${item.qty}</td></tr>`;
+        });
+        
+        const displayDate = entries[0].date.toString().split('T')[0].split('-').reverse().join('-');
+        document.getElementById('rChallan').innerText = challan.replace("NM-", "");
+        document.getElementById('rDate').innerText = displayDate;
+        document.getElementById('rItemsList').innerHTML = listHtml;
+        document.getElementById('rTotalQty').innerText = total + " Pcs";
+        
+        const note = entries[0].note || "";
+        if(note) {
+            document.getElementById('rNoteContainer').style.display = 'block';
+            document.getElementById('rNoteText').innerText = note;
+        } else {
+            document.getElementById('rNoteContainer').style.display = 'none';
+        }
+        document.getElementById('receiptModal').style.display = 'flex';
+    }
+
+    function render() {
+        document.getElementById('challanNo').value = "NM-" + nextNM;
+        let total = 0; 
+        const list = document.getElementById('logItems'); 
+        list.innerHTML = '';
+        
+        mfgData.forEach(i => total += (i.type === 'READY' ? i.qty : -i.qty));
+        document.getElementById('totalBalance').innerText = total.toLocaleString('en-IN');
+        
+        let processedChallans = [];
+        mfgData.forEach(i => {
+            const rawDate = i.date.toString().substring(0, 10);
+            const cleanDate = rawDate.split('-').reverse().join('-');
+
+            if(i.type === 'SENT' && !processedChallans.includes(i.challan)) {
+                processedChallans.push(i.challan);
+                const row = document.createElement('div');
+                row.className = 'log-item';
+                row.innerHTML = `<div><b>${i.challan}</b> (Dispatch)<br><small>${cleanDate} ${i.note ? ' - ' + i.note : ''}</small></div>
+                <div style="display:flex; align-items:center; gap:15px;"><button class="reprint-btn" onclick="reprintReceipt('${i.challan}')">REPRINT</button><b>- MULTI</b></div>`;
+                list.appendChild(row);
+            } else if(i.type === 'READY') {
+                const row = document.createElement('div');
+                row.className = 'log-item';
+                row.innerHTML = `<div><b>${i.design}</b> (Prod)<br><small>${cleanDate}${i.note ? ' - ' + i.note : ''}</small></div><b style="color:var(--ntm-green);">+${i.qty}</b>`;
+                list.appendChild(row);
+            }
+        });
+    }
+
+    function openInventory() {
+        const b = getDesignBalances(); const l = document.getElementById('inventoryList'); l.innerHTML = '';
+        Object.keys(b).sort().forEach(d => { if(b[d]>0) l.innerHTML += `<tr><td style="padding:12px; border-bottom:1px solid #eee;"><b>${d}</b></td><td style="padding:12px; border-bottom:1px solid #eee; text-align:right; color:var(--ntm-green);"><b>${b[d]} Pcs</b></td></tr>`; });
+        document.getElementById('inventoryModal').style.display = 'flex';
+    }
+    function closeInventory() { document.getElementById('inventoryModal').style.display = 'none'; }
+    function closeReceipt() { document.getElementById('receiptModal').style.display = 'none'; }
+    window.onload = () => { document.getElementById('entryDate').valueAsDate = new Date(); render(); syncDown(); };
+</script><script>
+    let mfgData = JSON.parse(localStorage.getItem('mfg_test_v1')) || [];
+    let nextNM = 101; 
+    let currentBag = [];
+    let hubConfig = JSON.parse(localStorage.getItem('msk_v13_config')) || { cloudUrl: "" };
+
+    function openSettings() {
+        document.getElementById('setCloudUrl').value = hubConfig.cloudUrl;
+        document.getElementById('setWaNum').value = localStorage.getItem('muskan_wa_num') || "";
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+    function saveSettings() {
+        hubConfig.cloudUrl = document.getElementById('setCloudUrl').value;
+        localStorage.setItem('msk_v13_config', JSON.stringify(hubConfig));
+        localStorage.setItem('muskan_wa_num', document.getElementById('setWaNum').value);
+        alert("Saved!"); location.reload();
+    }
+
+    async function syncDown() {
+        if (!hubConfig.cloudUrl) return;
+        const tag = document.getElementById('syncTag');
+        tag.innerText = "⏳ Fetching Sheet...";
+        try {
+            const response = await fetch(hubConfig.cloudUrl + "?action=GET_MFG");
+            const data = await response.json();
+            if (data && data.logs) {
+                mfgData = data.logs;
+                localStorage.setItem('mfg_test_v1', JSON.stringify(mfgData));
+                const sentLogs = mfgData.filter(l => l.type === 'SENT' && l.challan.startsWith("NM-"));
+                if(sentLogs.length > 0) {
+                    const nums = sentLogs.map(l => parseInt(l.challan.replace("NM-", "")));
+                    nextNM = Math.max(...nums) + 1;
+                } else { nextNM = 101; }
+                render();
+                tag.innerText = "✅ Sheet Data Loaded";
+            }
+        } catch (e) { tag.innerText = "❌ Sync Failed"; }
+    }
+
+    function getDesignBalances() {
+        let b = {}; mfgData.forEach(i => { if(!b[i.design]) b[i.design]=0; b[i.design]+=(i.type==='READY'?i.qty:-i.qty); }); 
+        currentBag.forEach(item => { b[item.design] -= item.qty; });
+        return b;
+    }
+
+    function showSuggestions(val) {
+        const box = document.getElementById('suggestionBox');
+        if(!val) { box.style.display='none'; return; }
+        const b = getDesignBalances();
+        const m = Object.keys(b).filter(d => d.includes(val.toUpperCase()));
+        if(m.length>0) {
+            box.innerHTML = ''; m.forEach(d => {
+                const i = document.createElement('div'); i.className='suggest-item';
+                i.innerHTML = `<b>${d}</b><span style="color:var(--ntm-green); font-size:11px;">Avail: ${b[d]}</span>`;
+                i.onclick = () => { document.getElementById('designNo').value=d; box.style.display='none'; };
+                box.appendChild(i);
+            }); box.style.display='block';
+        } else box.style.display='none';
+    }
+
+    function addToBag() {
+        const design = document.getElementById('designNo').value.trim().toUpperCase();
+        const qty = parseInt(document.getElementById('qtyInput').value);
+        const note = document.getElementById('uniNote').value.trim();
+        if(!design || !qty || qty <= 0) return alert("Enter Design and Qty");
+        const b = getDesignBalances();
+        if(qty > (b[design] || 0)) return alert(`❌ Shortage! Only ${b[design] || 0} left.`);
+        
+        currentBag.push({ design, qty, note }); 
+        document.getElementById('designNo').value = '';
+        document.getElementById('qtyInput').value = '';
+        renderBag();
+    }
+
+    function renderBag() {
+        const bagDiv = document.getElementById('dispatchBag');
+        const itemsDiv = document.getElementById('bagItems');
+        if(currentBag.length === 0) { bagDiv.style.display = 'none'; return; }
+        bagDiv.style.display = 'block';
+        itemsDiv.innerHTML = currentBag.map((item, idx) => `
+            <div class="bag-item"><span>${item.design} (x${item.qty})</span><span><button onclick="removeFromBag(${idx})" style="background:none; border:none; color:red; margin-left:10px;">✕</button></span></div>
+        `).join('');
+    }
+
+    function removeFromBag(idx) { currentBag.splice(idx, 1); renderBag(); }
+
+    function handleAction(type) {
+        const dateInput = document.getElementById('entryDate').value;
+        // FIX 1: Lock the date as a clean string immediately
+        const cleanDateStr = dateInput.split('T')[0];
+        
+        const currentNote = document.getElementById('uniNote').value.trim();
+        const challan = "NM-" + nextNM;
+
+        if (type === 'READY') {
+            const design = document.getElementById('designNo').value.trim().toUpperCase();
+            const qty = parseInt(document.getElementById('qtyInput').value);
+            if (!dateInput || !design || !qty || qty <= 0) return alert("Fill all fields!");
+            mfgData.unshift({ id: Date.now(), date: cleanDateStr, design, qty, type, challan: 'UNIT-IN', note: currentNote });
+            document.getElementById('designNo').value = '';
+            document.getElementById('qtyInput').value = '';
+            document.getElementById('uniNote').value = '';
+        } else {
+            if (currentBag.length === 0) return alert("Bag is empty!");
+            let totalQty = 0; let listHtml = "";
+            const waTarget = localStorage.getItem('muskan_wa_num') || "91";
+            
+            // FIX 2: Format date for WhatsApp and Receipt
+            const displayDate = cleanDateStr.split('-').reverse().join('-');
+            let waMsg = `*MUSKAN FASHION: DISPATCH*%0A----------------------------%0A*Challan:* ${challan}%0A*Date:* ${displayDate}%0A----------------------------%0A*Details:*%0A`;
+            
+            currentBag.forEach(item => {
+                mfgData.unshift({ id: Date.now(), date: cleanDateStr, design: item.design, qty: item.qty, type: 'SENT', challan, note: currentNote });
+                totalQty += item.qty;
+                listHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #eee;">${item.design}</td><td align="right" style="padding:5px 0; border-bottom:1px solid #eee;">${item.qty}</td></tr>`;
+                waMsg += `• ${item.design}: ${item.qty} Pcs%0A`;
+            });
+            
+            waMsg += `----------------------------%0A*TOTAL:* *${totalQty} Pcs*%0A----------------------------`;
+            if(currentNote) waMsg += `%0A%0A*Note:* ${currentNote}`;
+
+            document.getElementById('rChallan').innerText = challan.replace("NM-", ""); // Number only as requested
+            document.getElementById('rDate').innerText = displayDate;
+            document.getElementById('rItemsList').innerHTML = listHtml;
+            document.getElementById('rTotalQty').innerText = totalQty + " Pcs";
+            
+            if(currentNote) {
+                document.getElementById('rNoteContainer').style.display = 'block';
+                document.getElementById('rNoteText').innerText = currentNote;
+            } else {
+                document.getElementById('rNoteContainer').style.display = 'none';
+            }
+
+            document.getElementById('receiptModal').style.display = 'flex';
+            window.open(`https://wa.me/${waTarget}?text=${waMsg}`, '_blank');
+            currentBag = [];
+            document.getElementById('uniNote').value = '';
+            renderBag();
+            nextNM++;
+        }
+        localStorage.setItem('mfg_test_v1', JSON.stringify(mfgData));
+        render();
+        syncToCloud(); 
+    }
+
+    async function syncToCloud() {
+        if (!hubConfig.cloudUrl) return;
+        // FIX 3: Clean dates in the export map to ensure they hit the sheet as text strings
+        const cleanedLogs = mfgData.map(i => ({
+            ...i,
+            date: i.date.toString().split('T')[0]
+        }));
+        
+        try {
+            await fetch(hubConfig.cloudUrl, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: "SYNC_MFG", logs: cleanedLogs }) 
+            });
+        } catch (e) { }
+    }
+
+    function reprintReceipt(challan) {
+        const entries = mfgData.filter(i => i.challan === challan);
+        if(entries.length === 0) return;
+        let total = 0; let listHtml = "";
+        entries.forEach(item => {
+            total += item.qty;
+            listHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #eee;">${item.design}</td><td align="right" style="padding:5px 0; border-bottom:1px solid #eee;">${item.qty}</td></tr>`;
+        });
+        
+        const displayDate = entries[0].date.toString().split('T')[0].split('-').reverse().join('-');
+        document.getElementById('rChallan').innerText = challan.replace("NM-", "");
+        document.getElementById('rDate').innerText = displayDate;
+        document.getElementById('rItemsList').innerHTML = listHtml;
+        document.getElementById('rTotalQty').innerText = total + " Pcs";
+        
+        const note = entries[0].note || "";
+        if(note) {
+            document.getElementById('rNoteContainer').style.display = 'block';
+            document.getElementById('rNoteText').innerText = note;
+        } else {
+            document.getElementById('rNoteContainer').style.display = 'none';
+        }
+        document.getElementById('receiptModal').style.display = 'flex';
+    }
+
+    function render() {
+        document.getElementById('challanNo').value = "NM-" + nextNM;
+        let total = 0; 
+        const list = document.getElementById('logItems'); 
+        list.innerHTML = '';
+        
+        mfgData.forEach(i => total += (i.type === 'READY' ? i.qty : -i.qty));
+        document.getElementById('totalBalance').innerText = total.toLocaleString('en-IN');
+        
+        let processedChallans = [];
+        mfgData.forEach(i => {
+            const rawDate = i.date.toString().substring(0, 10);
+            const cleanDate = rawDate.split('-').reverse().join('-');
+
+            if(i.type === 'SENT' && !processedChallans.includes(i.challan)) {
+                processedChallans.push(i.challan);
+                const row = document.createElement('div');
+                row.className = 'log-item';
+                row.innerHTML = `<div><b>${i.challan}</b> (Dispatch)<br><small>${cleanDate} ${i.note ? ' - ' + i.note : ''}</small></div>
+                <div style="display:flex; align-items:center; gap:15px;"><button class="reprint-btn" onclick="reprintReceipt('${i.challan}')">REPRINT</button><b>- MULTI</b></div>`;
+                list.appendChild(row);
+            } else if(i.type === 'READY') {
+                const row = document.createElement('div');
+                row.className = 'log-item';
+                row.innerHTML = `<div><b>${i.design}</b> (Prod)<br><small>${cleanDate}${i.note ? ' - ' + i.note : ''}</small></div><b style="color:var(--ntm-green);">+${i.qty}</b>`;
+                list.appendChild(row);
+            }
+        });
+    }
+
+    function openInventory() {
+        const b = getDesignBalances(); const l = document.getElementById('inventoryList'); l.innerHTML = '';
+        Object.keys(b).sort().forEach(d => { if(b[d]>0) l.innerHTML += `<tr><td style="padding:12px; border-bottom:1px solid #eee;"><b>${d}</b></td><td style="padding:12px; border-bottom:1px solid #eee; text-align:right; color:var(--ntm-green);"><b>${b[d]} Pcs</b></td></tr>`; });
+        document.getElementById('inventoryModal').style.display = 'flex';
+    }
+    function closeInventory() { document.getElementById('inventoryModal').style.display = 'none'; }
+    function closeReceipt() { document.getElementById('receiptModal').style.display = 'none'; }
+    window.onload = () => { document.getElementById('entryDate').valueAsDate = new Date(); render(); syncDown(); };
+</script>
+</body>
+</html>
