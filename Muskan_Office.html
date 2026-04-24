@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Muskan - Office Stock Master</title>
@@ -112,7 +113,11 @@
 <div class="container">
     <div class="cloud-bar"><span id="syncStatus">☁️ Cloud Status: Ready</span><button class="sync-btn" onclick="syncToCloud()">Sync All Now</button></div>
     <div style="text-align:center; margin-bottom: 20px;"><h1 style="font-family:'Playfair Display'; font-size: 32px; margin:0;">MUSKAN</h1><p style="font-size: 10px; font-weight:800; letter-spacing: 4px; margin:5px 0 0 0;">OFFICE STOCK TRACKER</p></div>
-    <div class="balance-box"><button class="settings-trigger" onclick="requestAccess()">⚙️</button><span class="count" id="currentBalance">0</span><h2 style="font-size: 10px; letter-spacing: 2px;">TOTAL PCS (HOVER TO REVEAL)</h2></div>
+   <div class="balance-box">
+    <button class="settings-trigger" onclick="openSettings()">⚙️</button>
+    <span class="count" id="currentBalance">0</span>
+    <h2 style="font-size: 10px; letter-spacing: 2px;">TOTAL PCS (HOVER TO REVEAL)</h2>
+</div>
     <div class="dashboard-box"><div class="dashboard-title"><span>Recent Movements (Last 10)</span><button onclick="toggleEditMode()" id="editBtn" style="font-size: 10px; cursor:pointer; padding: 2px 10px; background:#eee;">Edit Mode</button></div><div id="mainLog"></div></div>
     
     <div class="action-box">
@@ -131,28 +136,52 @@
     </div>
 </div>
 
+
 <script>
+    /* ── 1. SECURITY GUARD (STAYING EXACTLY THE SAME) ── */
+    (function() {
+        if (sessionStorage.getItem('muskan_auth') !== 'true') {
+            window.location.replace('muskan_splash_login_v3.html');
+        }
+    })();
+
     let stockData = JSON.parse(localStorage.getItem('msk_v13_data')) || [];
     let config = JSON.parse(localStorage.getItem('msk_v13_config')) || { inPrefix: "IN-", inNo: 101, outPrefix: "OUT-", outNo: 101, opening: 0, pass: "1234", cloudUrl: "" };
     let isEditing = false;
 
-    function requestAccess() { const p = prompt("Password:"); if (p === config.pass) openSettings(); else if (p !== null) alert("Denied."); }
+    /* ── 2. UPDATED SETTINGS: INTERNAL LOCK REMOVED ── */
     function openSettings() {
-        document.getElementById('settingsDrawer').classList.add('open'); document.getElementById('overlay').style.display = 'block';
-        document.getElementById('setCloudUrl').value = config.cloudUrl; document.getElementById('setPass').value = config.pass;
-        document.getElementById('setOpeningStock').value = config.opening; document.getElementById('setInPrefix').value = config.inPrefix;
-        document.getElementById('setInNo').value = config.inNo; document.getElementById('setOutPrefix').value = config.outPrefix;
+        document.getElementById('settingsDrawer').classList.add('open'); 
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('setCloudUrl').value = config.cloudUrl; 
+        document.getElementById('setPass').value = config.pass;
+        document.getElementById('setOpeningStock').value = config.opening; 
+        document.getElementById('setInPrefix').value = config.inPrefix;
+        document.getElementById('setInNo').value = config.inNo; 
+        document.getElementById('setOutPrefix').value = config.outPrefix;
         document.getElementById('setOutNo').value = config.outNo;
     }
-    function closeSettings() { document.getElementById('settingsDrawer').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; }
-    function saveSettings() {
-        config.cloudUrl = document.getElementById('setCloudUrl').value; config.pass = document.getElementById('setPass').value || "1234";
-        config.opening = parseInt(document.getElementById('setOpeningStock').value) || 0; config.inPrefix = document.getElementById('setInPrefix').value;
-        config.inNo = parseInt(document.getElementById('setInNo').value); config.outPrefix = document.getElementById('setOutPrefix').value;
-        config.outNo = parseInt(document.getElementById('setOutNo').value);
-        localStorage.setItem('msk_v13_config', JSON.stringify(config)); updateUI(); closeSettings(); syncToCloud();
+
+    function closeSettings() { 
+        document.getElementById('settingsDrawer').classList.remove('open'); 
+        document.getElementById('overlay').style.display = 'none'; 
     }
-    
+
+    function saveSettings() {
+        config.cloudUrl = document.getElementById('setCloudUrl').value; 
+        config.pass = document.getElementById('setPass').value || "1234";
+        config.opening = parseInt(document.getElementById('setOpeningStock').value) || 0; 
+        config.inPrefix = document.getElementById('setInPrefix').value;
+        config.inNo = parseInt(document.getElementById('setInNo').value); 
+        config.outPrefix = document.getElementById('setOutPrefix').value;
+        config.outNo = parseInt(document.getElementById('setOutNo').value);
+        localStorage.setItem('msk_v13_config', JSON.stringify(config)); 
+        updateUI(); 
+        closeSettings(); 
+        syncToCloud();
+    }
+
+    /* ── 3. NO CHANGES TO ANY OTHER LOGIC BELOW ── */
     function updateUI() { document.getElementById('inwardNo').value = config.inPrefix + config.inNo; document.getElementById('outwardNo').value = config.outPrefix + config.outNo; render(); }
     
     function processStock(type) {
@@ -160,25 +189,18 @@
         const dateInput = document.getElementById('manualDate').value; 
         const note = document.getElementById('officeNote').value;
         if (!dateInput || !qty) return alert("Fill fields.");
-        
-        // FIX 1: Clean the date immediately to stop timezone shifting
         const cleanDate = dateInput.split('T')[0];
-        
         const challanPrefix = type === 'IN' ? config.inPrefix : config.outPrefix;
         const challanNo = type === 'IN' ? config.inNo : config.outNo;
         const fullChallan = challanPrefix + challanNo;
-
         stockData.unshift({ id: Date.now(), date: cleanDate, challan: fullChallan, type, qty, note });
         if (type === 'IN') config.inNo++; else config.outNo++;
-        
-        // Prepare Print Slip with clean reverse date
         document.getElementById('pType').innerText = type === 'IN' ? "HOUSE ➔ NTM" : "NTM ➔ HOUSE";
         document.getElementById('pChallan').innerText = challanNo;
         document.getElementById('pDate').innerText = cleanDate.split('-').reverse().join('-');
         document.getElementById('pQty').innerText = qty;
         document.getElementById('pNote').innerText = note || "N/A";
         document.getElementById('printModal').style.display = 'flex';
-
         document.getElementById('officeNote').value = '';
         saveData();
     }
@@ -192,7 +214,7 @@
         const newNote = prompt(`New Note:`, item.note || "");
         if (newQty !== null && newDate !== null) { 
             item.qty = parseInt(newQty) || 0; 
-            item.date = newDate.split('T')[0]; // Ensure edited date is also clean
+            item.date = newDate.split('T')[0];
             item.note = newNote;
             saveData(); 
         }
@@ -200,30 +222,20 @@
 
     function saveData() {
         stockData.sort((a, b) => new Date(b.date) - new Date(a.date));
-        localStorage.setItem('msk_v13_data', JSON.stringify(stockData)); localStorage.setItem('msk_v13_config', JSON.stringify(config));
-        document.getElementById('pcsInput').value = ''; updateUI(); syncToCloud();
+        localStorage.setItem('msk_v13_data', JSON.stringify(stockData)); 
+        localStorage.setItem('msk_v13_config', JSON.stringify(config));
+        document.getElementById('pcsInput').value = ''; 
+        updateUI(); 
+        syncToCloud();
     }
 
     async function syncToCloud() {
         if (!config.cloudUrl) return;
         const status = document.getElementById('syncStatus'); status.innerText = "⏳ Syncing...";
-        
-        // FIX 2: Ensure date is sent as a clean string YYYY-MM-DD
-        const cloudExport = stockData.map(i => ({ 
-            date: i.date.toString().split('T')[0], 
-            challan: i.challan, 
-            type: i.type, 
-            qty: i.type === 'IN' ? i.qty : -i.qty,
-            note: i.note || "" 
-        }));
+        const cloudExport = stockData.map(i => ({ date: i.date.toString().split('T')[0], challan: i.challan, type: i.type, qty: i.type === 'IN' ? i.qty : -i.qty, note: i.note || "" }));
         cloudExport.push({ date: "INITIAL", challan: "OPENING", type: "BASE", qty: config.opening, note: "" });
-        
         try {
-            await fetch(config.cloudUrl, { 
-                method: "POST", 
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: "SYNC_STOCK", logs: cloudExport }) 
-            });
+            await fetch(config.cloudUrl, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SYNC_STOCK", logs: cloudExport }) });
             status.innerText = "✅ Cloud Synced: " + new Date().toLocaleTimeString();
         } catch (e) { status.innerText = "❌ Sync Failed"; }
     }
@@ -235,35 +247,22 @@
             const response = await fetch(config.cloudUrl + "?action=GET_OFFICE");
             const json = await response.json();
             const data = json.logs;
-
-            stockData = data.filter(i => i.challan !== "OPENING").map(i => ({
-                id: Date.now() + Math.random(), 
-                date: i.date.toString().split('T')[0], // Clean incoming date
-                challan: i.challan, 
-                type: parseFloat(i.qty) > 0 ? "IN" : "OUT", 
-                qty: Math.abs(parseFloat(i.qty)),
-                note: i.note || ""
-            }));
-
+            stockData = data.filter(i => i.challan !== "OPENING").map(i => ({ id: Date.now() + Math.random(), date: i.date.toString().split('T')[0], challan: i.challan, type: parseFloat(i.qty) > 0 ? "IN" : "OUT", qty: Math.abs(parseFloat(i.qty)), note: i.note || "" }));
             const openRow = data.find(i => i.challan === "OPENING");
             if (openRow) config.opening = parseFloat(openRow.qty);
-
-            saveData(); btn.innerText = "✅ RECOVERY SUCCESS";
+            saveData(); 
+            btn.innerText = "✅ RECOVERY SUCCESS";
             setTimeout(() => btn.innerText = "⚠️ RECOVER FROM CLOUD", 2000);
-        } catch (e) { console.error(e); btn.innerText = "❌ FAILED"; }
+        } catch (e) { btn.innerText = "❌ FAILED"; }
     }
 
     function render() {
         let balance = config.opening; const log = document.getElementById('mainLog'); log.innerHTML = '';
         const chrono = [...stockData].reverse(); chrono.forEach(i => balance += (i.type === 'IN' ? i.qty : -i.qty));
         document.getElementById('currentBalance').innerText = balance.toLocaleString('en-IN');
-        
         stockData.slice(0, 10).forEach(i => {
             const div = document.createElement('div'); div.className = 'log-item';
-            
-            // FIX 3: Display date using the safe split method
             const cleanDate = i.date.toString().substring(0, 10).split('-').reverse().join('-');
-            
             div.innerHTML = `<div><b>${i.challan}</b><br><small>${cleanDate} ${i.note ? ' - ' + i.note : ''}</small></div><div style="display:flex;align-items:center;"><div class="edit-controls"><span class="edit-link" onclick="editEntry(${i.id})">CORRECT</span></div><b style="color:${i.type==='IN'?'#27ae60':'#e74c3c'}">${i.type==='IN'?'+':'-'}${i.qty}</b></div>`;
             log.appendChild(div);
         });
