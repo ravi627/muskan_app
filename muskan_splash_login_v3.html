@@ -1,0 +1,493 @@
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  #root {
+    width: 100%;
+    min-height: 620px;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow: hidden;
+    background: #F0EAE1;
+  }
+
+  #root::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0px, transparent 5px, rgba(44,46,53,0.025) 5px, rgba(44,46,53,0.025) 6px),
+      repeating-linear-gradient(90deg, transparent 0px, transparent 5px, rgba(44,46,53,0.025) 5px, rgba(44,46,53,0.025) 6px);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── SPLASH ── */
+  #splash {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 10;
+    transition: opacity 1s ease;
+  }
+
+  .corner {
+    position: absolute; width: 20px; height: 20px;
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+  .corner.tl { top: 24px; left: 24px; border-top: 2px solid #2c2e35; border-left: 2px solid #2c2e35; }
+  .corner.tr { top: 24px; right: 24px; border-top: 2px solid #2c2e35; border-right: 2px solid #2c2e35; }
+  .corner.bl { bottom: 24px; left: 24px; border-bottom: 2px solid #2c2e35; border-left: 2px solid #2c2e35; }
+  .corner.br { bottom: 24px; right: 24px; border-bottom: 2px solid #2c2e35; border-right: 2px solid #2c2e35; }
+
+  .stitch-line {
+    width: 0; height: 0;
+    /* Reduced opacity for a subtle 'thread' look */
+    border-top: 2px dashed rgba(44,46,53,0.3); 
+    opacity: 0;
+    transition: width 1.2s cubic-bezier(.22,1,.36,1), opacity 0.4s ease;
+    /* This creates the 'pulling' effect */
+    background-image: linear-gradient(90deg, transparent 50%, rgba(44,46,53,0.1) 50%);
+    background-size: 10px 100%;
+    animation: sewingThread 0.4s linear infinite;
+}
+
+@keyframes sewingThread {
+    from { background-position: 0 0; }
+    to { background-position: 10px 0; }
+}
+
+  #splash-logo {
+    width: 85%; max-width: 420px;
+    margin: 16px 0;
+    opacity: 0; transition: opacity 0.2s ease;
+  }
+  #splash-logo svg { width: 100%; height: auto; }
+
+  #splash-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: #2c2e35; opacity: 0; margin-top: 4px;
+    transition: opacity 0.6s ease;
+  }
+
+  #accent-bar {
+    width: 0; height: 3px;
+    background: #ffc734;
+    margin: 10px auto 0;
+    transition: width 0.9s cubic-bezier(.22,1,.36,1);
+    border-radius: 2px;
+  }
+
+  /* ── LOGIN ── */
+  #login {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.8s ease;
+    z-index: 9;
+    /* FIX: Added bottom padding so the keyboard doesn't hide the 'Enter' button */
+    padding-bottom: 120px; 
+    overflow-y: auto;
+}
+
+.login-card {
+    /* ... existing styles ... */
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+}
+
+/* The "Physical Door Opening" effect */
+.login-card.leaving {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: 24px; right: 24px;
+    height: 4px; background: #ffc734;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .card-corner { position: absolute; width: 12px; height: 12px; }
+  .card-corner.tl { top: 8px; left: 8px; border-top: 1.5px solid rgba(44,46,53,0.2); border-left: 1.5px solid rgba(44,46,53,0.2); }
+  .card-corner.tr { top: 8px; right: 8px; border-top: 1.5px solid rgba(44,46,53,0.2); border-right: 1.5px solid rgba(44,46,53,0.2); }
+  .card-corner.bl { bottom: 8px; left: 8px; border-bottom: 1.5px solid rgba(44,46,53,0.2); border-left: 1.5px solid rgba(44,46,53,0.2); }
+  .card-corner.br { bottom: 8px; right: 8px; border-bottom: 1.5px solid rgba(44,46,53,0.2); border-right: 1.5px solid rgba(44,46,53,0.2); }
+
+  .card-logo {
+    display: flex; justify-content: center;
+    margin-bottom: 6px;
+  }
+  .card-logo svg { width: 85%; max-width: 280px; height: auto; display: block; }
+
+  .card-divider {
+    border: none;
+    border-top: 2px dashed rgba(44,46,53,0.15);
+    margin: 18px 0 24px;
+  }
+
+  .login-label {
+    display: block;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: #2c2e35; margin-bottom: 6px; opacity: 0.6;
+  }
+
+  /* password row with show/hide toggle */
+  .pw-row {
+    position: relative; margin-bottom: 24px;
+  }
+  .login-input {
+    width: 100%;
+    background: #F0EAE1;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    color: #2c2e35;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 400;
+    padding: 10px 42px 10px 14px;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .login-input:focus { border-color: #ffc734; background: #fff; }
+  .login-input::placeholder { color: rgba(44,46,53,0.3); }
+
+  .eye-btn {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    cursor: pointer; padding: 0;
+    color: rgba(44,46,53,0.35);
+    font-size: 16px; line-height: 1;
+    transition: color 0.2s ease;
+  }
+  .eye-btn:hover { color: #2c2e35; }
+
+  /* button row */
+  .btn-row {
+    display: flex; gap: 10px; margin-top: 4px;
+  }
+
+  .login-btn {
+    flex: 1;
+    background: #2c2e35; color: #ffc734;
+    border: 2px solid #2c2e35;
+    border-radius: 6px; padding: 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  }
+  .login-btn:hover { background: #ffc734; color: #2c2e35; }
+  .login-btn:active { transform: scale(0.99); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+  .settings-btn {
+    width: 46px; height: 46px;
+    background: #F0EAE1;
+    border: 2px solid #2c2e35;
+    border-radius: 6px;
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    position: relative;
+  }
+  .settings-btn:hover { background: #ffc734; border-color: #ffc734; }
+  .settings-btn:active { transform: scale(0.97); }
+  .settings-btn svg { width: 18px; height: 18px; fill: #2c2e35; }
+
+  /* settings panel — slides down */
+  .settings-panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+    opacity: 0;
+  }
+  .settings-panel.open { max-height: 180px; opacity: 1; }
+
+  .settings-inner {
+    margin-top: 16px;
+    background: #F0EAE1;
+    border-radius: 6px;
+    padding: 16px;
+    border: 1.5px dashed rgba(44,46,53,0.2);
+  }
+  .settings-inner p {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(44,46,53,0.5);
+    margin-bottom: 10px;
+  }
+  .set-row { display: flex; gap: 8px; }
+  .set-input {
+    flex: 1;
+    background: #fff;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    color: #2c2e35;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  .set-input:focus { border-color: #ffc734; }
+  .set-input::placeholder { color: rgba(44,46,53,0.3); font-size: 12px; }
+  .set-save-btn {
+    background: #2c2e35; color: #ffc734;
+    border: 2px solid #2c2e35;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+  }
+  .set-save-btn:hover { background: #ffc734; color: #2c2e35; }
+  .set-saved {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; color: #27ae60;
+    text-transform: uppercase;
+    margin-top: 8px; opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .login-footer {
+    text-align: center; margin-top: 20px;
+    font-size: 9px; font-weight: 700;
+    color: rgba(44,46,53,0.3);
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+</style>
+
+<div id="root">
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="stitch-line" id="stitch-top"></div>
+
+    <div id="splash-logo">
+      <svg viewBox="0 0 750 250" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="rc"><rect id="rr" x="0" y="0" width="0" height="250"/></clipPath></defs>
+        <style>.s0{fill:#2c2e35}.s1{fill:#ffc734}.s2{fill:#e1ded2}.s3{fill:#b1ad96}</style>
+        <g clip-path="url(#rc)">
+          <path class="s0" d="m477.99 177.07l13.45 0.06-0.01 3.09-8.35-0.04-0.02 3.01 8.35 0.04-0.01 3.04-8.35-0.04-0.03 7.48-5.1-0.03zm34.6 0.16l5.23 0.03 10.35 16.66-5.36-0.02-2.11-3.44-11.04-0.05-2.23 3.42-5.36-0.03zm2.63 4.42l-3.64 5.69 7.21 0.03zm39.52-1.97l-3.82 2.05q-2-1.72-4.09-1.73-1.01-0.01-1.66 0.32-0.64 0.33-0.64 0.75-0.01 0.42 0.45 0.79 0.63 0.5 3.77 2.15 2.94 1.53 3.56 1.93 1.57 0.98 2.21 1.87 0.65 0.89 0.65 1.94-0.01 2.04-2.32 3.37-2.31 1.31-6.01 1.3-2.89-0.02-5.03-0.89-2.15-0.88-3.66-2.75l4.33-1.59q1.95 2.22 4.48 2.23 1.33 0 2.24-0.47 0.9-0.47 0.9-1.09 0-0.56-0.67-1.13-0.68-0.57-2.99-1.74-4.42-2.24-5.7-3.45-1.28-1.21-1.28-2.4 0.01-1.73 2.16-2.96 2.15-1.22 5.3-1.21 2.03 0.01 3.86 0.59 1.82 0.59 3.96 2.12zm13.72-2.19l5.23 0.02-0.03 6.27 9.07 0.04 0.03-6.27 5.21 0.02-0.08 16.62-5.21-0.02 0.03-7.29-9.06-0.04-0.04 7.28-5.23-0.02zm38.75 0.18l-0.08 16.61-5.12-0.02 0.08-16.62zm26.92-0.29q5.76 0.03 9.88 2.6 4.12 2.57 4.1 6.24-0.01 3.64-4.11 6.14-4.09 2.5-9.91 2.47-6.09-0.03-10.12-2.63-4.02-2.61-4.01-6.16 0.02-2.39 1.9-4.38 1.89-1.99 5.19-3.14 3.29-1.16 7.08-1.14zm-0.06 3.1q-3.77-0.02-6.33 1.57-2.57 1.59-2.58 4.07-0.02 2.75 3.2 4.37 2.5 1.26 5.74 1.28 3.67 0.02 6.25-1.6 2.6-1.61 2.61-3.99 0.01-2.38-2.59-4.03-2.58-1.66-6.3-1.67zm27.27-2.56l4.94 0.03 11.58 10.98 0.05-10.93 5.15 0.02-0.07 16.62-4.96-0.02-11.56-10.96-0.05 10.9-5.15-0.02z"/>
+          <path class="s1" d="m228.43 169.12c-10.71-8.14-15.78-14.99-1.91-21.81 36-9.17 71.5 3.65 107.1 11.74 15.51 2.49 37.62 4.3 52.19-4.98 0.32 0.05 0.68 0.15 1.04 0.26 2.11 6.69-10.57 12.43-14.35 13.44-18.34 4.92-39.09 1.36-56.66-3.42-20.68-5.64-41.41-11.39-62.45-10.03-6.83 1.37-14.91 6.76-4.92 10.82 50.9 20.71 125.06 31.18 175.24 3.22 14.54-8.11 1.26-17.27-7.78-21.53-25.91-7.05-52.45-7.18-77.77-15.43-12.72-6.08-30.55-18.52-20.27-35.2 8.91-8.8 23.47-6.17 34.61-4.66 17.97 3.24 48.89 10.02 65.2-4.07 0.09 0 0.23 0.05 0.37 0.1-0.45 7.18-4.38 11.63-8.91 16.58-18.14 15.29-40.52 2.88-59.76-0.72-16.66-0.08-13.58 13.24-0.55 19.43 20.41 6.83 41.88 9.59 63.3 13.4 16.47 3.49 54.55 16.07 34.41 41.49-44.13 38.58-177.94 16.48-218.13-8.63z"/>
+          <path class="s2" d="m144.7 163.2c-20.71-1.23-40.12-16.01-60.59-10.6-4.28 1.7-14.29 9.77-14.24-1.58 4.2-10.99 23.18-10.69 30.1-10.52 19.24 3.04 37.05 14.08 56.94 9.68 11.84-2.62 45.93-21.82 56.17-0.31 2.15 6.53-3 9.11-6.03 5.84-4.9-3.88-11.09-3.56-16.1-3.58-15.76 3.29-30.56 12-46.25 11.07z"/>
+          <path class="s2" d="m568.38 164.91c-26.51-1.36-52.22-8.29-78.26-8.41-4.78 0.67-22.94 9.39-22.89-0.65 4.21-15.67 48.11-9.07 57.57-7.92 30.87 7.22 62.92 7.44 94.27 0.22 21.18-3.41 42.68-6.27 64.15-2.73 4.41 1.39 13.96 2.75 13.5 13.06-4.66 5.14-8.33 0.1-13.42-1.57-38.56-7.26-76.49 9.97-114.92 8z"/>
+          <path class="s3" d="m255.93 136.62c-19.2-1.81-18.75-19.55-29.43-32.92-5.22-3.86-8.93 0.74-12.7-0.52 1.71-8.78 22.63-18.44 30.12-6.41 4.23 6.8 8.29 16.14 14.02 21.91 8.76 8.8 22.02 2.76 19.29-9.66-2.12-5.74-4.14-11.35-7.21-15.94-1.46-1.16-3-1.96-3.86-2.65 1.24-1.9 10.61-1.02 13.2-0.5 18.82 5.82 12.44 26.33 25.73 36.97 3.98 3.19 8.7 2.93 14.03 3.61q0 0.27 0 0.6c-14.62 11.03-31.32 5.29-37.57-12.22q-0.35-0.07-0.64-0.14c-1.47 10.53-15.27 18.79-24.98 17.87z"/>
+          <path class="s3" d="m436.56 123.02c-1.21-4.49-1.83-7.87-2.19-8.61-4.96 0.58-17.23 5.33-19.07-1.06 0.53-5.68 10.1-8.83 14.57-9.92 2.6-0.27 2.6-0.27 2.96-0.5-0.08-12.34 0.08-26.68-7.34-36.47 5.57-1.2 13.74 1.56 17.87 5.63 6.47 6.39 6.57 17.29 7.51 29.16-4.71 0.4 43.2-14.43 90.55-12.92 3.55 0.11 2.91 3.71 0.2 4.33-19.81 2.68-39.03 5.65-58.4 9.3-12.89 3-19.27 4.08-19.77 4.95 18.27 5.73 33.03 11.9 49.46 22.7q-0.01 0.35 0.05 0.7c-9.75 10.91-28.03-2.77-36.52-7.06-7.59-3.46-16.44-8.58-24.41-9.13 0.69 9.34 3.46 19.72 15.28 14.91-8.18 12.46-25.46 10.12-30.75-6.01z"/>
+          <path class="s3" d="m203.96 134.81c-15.01-2.94-12.43-19.48-21.77-27.57-6.65-0.03-15.28 17.13-18.49 21.56-12.17 13.58-21.96-10.67-25.99-18.71-4.54-9.34-8.79-7.13-12.66-2.38-4.64 5.69-8.88 11.97-13.39 17.8-5.12 6.6-11.92 11.48-19.11 4.12-7.68-12.75-12.72-25.72-20.72-37.6-5.91-6.9-16.58 2.33-19.4 3.06-0.09-0.1-0.19-0.19-0.23-0.24 1.53-5.62 7.9-11.19 14.38-14.36 6.17-3.01 14.08-4.29 18.32 2.83l17.25 28.92c1.94 2.78 1.94 2.78 2.62 3.39 10.18 3.74 19.46-35.15 36.63-26.66 6.39 5.26 12.09 13.84 16.2 21.49 3.48 4.41 5.58 2.61 9.24-1.3 10.48-12.58 18.12-30.85 31.55-11 3.2 7.09 6.03 14.41 9.64 21.82 5.11 8.49 5.93 6.64 15.73 5.21-0.03 5.83-15.39 9.64-19.8 9.62z"/>
+          <path class="s3" d="m652.98 123.7c0.8-6.49 5.17-14.74 4.57-19-4.96-0.43-8.9 5.37-12.96 7.53-7.59 5.98-18.01 15.87-27.13 19.39-22.5 2.39 6.35-33.64-6.85-33.7-2.01 0.6-7.39 2.88-8.66 2.37 2.93-5.17 19.53-11.89 26.18-11.86 12.86 3.53-1.45 18.68 1.89 23.82 7.67 0.04 18.69-14.14 29.73-19.78 10.55-5.39 18.28-1.95 15.71 10.68-0.58 2.85-1.63 5.71-2.53 8.41-5.49 16.52 12.27 3.73 14.7 1.7 0.54 3.28-3.87 7.56-9.53 11.27-5.57 3.67-27.21 16.17-25.12-0.83z"/>
+          <path class="s3" d="m697.25 132.63q-0.2-0.15-0.41-0.23c3.76-8.1 30.29-15.2 39.94-9.5 7.67 4.52 1.63 8.62-6.04 7.52-8.61-1.23-14.97-1.94-23.92-0.38-8.38 2.41-8.38 2.41-9.57 2.59z"/>
+          <path class="s3" d="m52.03 129.67q0.2-0.15 0.41-0.23c-3.68-8.13-30.15-15.47-39.86-9.86-7.71 4.45-1.7 8.6 5.98 7.57 8.61-1.15 14.99-1.8 23.92-0.16 8.36 2.49 8.36 2.49 9.55 2.68z"/>
+          <path class="s1" d="m686.82 127.56c7.06-6.94 24.46-20.39 37.75-21.03 6.87-0.34 10.96 7.93 4.53 8.48-15.96 1.36-25.55 5.39-39.98 14.44-3.28 1.31-5.84 1.59-2.3-1.89z"/>
+          <path class="s1" d="m62.5 124.7c-6.99-7.01-24.27-20.61-37.56-21.38-6.86-0.4-11.03 7.83-4.6 8.44 15.95 1.5 25.5 5.63 39.85 14.8 3.26 1.34 5.82 1.65 2.31-1.86z"/>
+          <path fill-rule="evenodd" class="s3" d="m525.32 134.16c-26.79-4.15 3.89-24.36 12.61-29.59 14.73-7.33 30.62-16.88 47.64-16.8 18.27 6.28-7.43 32.48 6.99 33.38 2.6-0.5 5.75-2.33 8.53-2.46-0.62 4.8-18.13 12.45-23.33 14-6.69-0.22-11.64-3.02-9.37-10.77q-0.56 0.07-1.05 0.22c-14.05 7.47-26.5 11.44-42.02 12.02zm45.76-27.32c3.77-12.68-19.76-0.27-22.93 1.95-3.08 1.39-17.09 11.82-8.58 15.15 10.59 0.56 25.83-8.26 31.51-17.1z"/>
+        </g>
+      </svg>
+    </div>
+
+    <div id="accent-bar"></div>
+    <div class="stitch-line" id="stitch-bot" style="margin-top:14px;"></div>
+    <div id="splash-tag">Muskan Fashion &nbsp;·&nbsp; Command Center</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="login-card">
+      <div class="card-corner tl"></div>
+      <div class="card-corner tr"></div>
+      <div class="card-corner bl"></div>
+      <div class="card-corner br"></div>
+
+      <div class="card-logo">
+        <svg viewBox="0 0 750 250" xmlns="http://www.w3.org/2000/svg">
+          <style>.l0{fill:#2c2e35}.l1{fill:#ffc734}.l2{fill:#e1ded2}.l3{fill:#b1ad96}</style>
+          <path class="l0" d="m477.99 177.07l13.45 0.06-0.01 3.09-8.35-0.04-0.02 3.01 8.35 0.04-0.01 3.04-8.35-0.04-0.03 7.48-5.1-0.03zm34.6 0.16l5.23 0.03 10.35 16.66-5.36-0.02-2.11-3.44-11.04-0.05-2.23 3.42-5.36-0.03zm2.63 4.42l-3.64 5.69 7.21 0.03zm39.52-1.97l-3.82 2.05q-2-1.72-4.09-1.73-1.01-0.01-1.66 0.32-0.64 0.33-0.64 0.75-0.01 0.42 0.45 0.79 0.63 0.5 3.77 2.15 2.94 1.53 3.56 1.93 1.57 0.98 2.21 1.87 0.65 0.89 0.65 1.94-0.01 2.04-2.32 3.37-2.31 1.31-6.01 1.3-2.89-0.02-5.03-0.89-2.15-0.88-3.66-2.75l4.33-1.59q1.95 2.22 4.48 2.23 1.33 0 2.24-0.47 0.9-0.47 0.9-1.09 0-0.56-0.67-1.13-0.68-0.57-2.99-1.74-4.42-2.24-5.7-3.45-1.28-1.21-1.28-2.4 0.01-1.73 2.16-2.96 2.15-1.22 5.3-1.21 2.03 0.01 3.86 0.59 1.82 0.59 3.96 2.12zm13.72-2.19l5.23 0.02-0.03 6.27 9.07 0.04 0.03-6.27 5.21 0.02-0.08 16.62-5.21-0.02 0.03-7.29-9.06-0.04-0.04 7.28-5.23-0.02zm38.75 0.18l-0.08 16.61-5.12-0.02 0.08-16.62zm26.92-0.29q5.76 0.03 9.88 2.6 4.12 2.57 4.1 6.24-0.01 3.64-4.11 6.14-4.09 2.5-9.91 2.47-6.09-0.03-10.12-2.63-4.02-2.61-4.01-6.16 0.02-2.39 1.9-4.38 1.89-1.99 5.19-3.14 3.29-1.16 7.08-1.14zm-0.06 3.1q-3.77-0.02-6.33 1.57-2.57 1.59-2.58 4.07-0.02 2.75 3.2 4.37 2.5 1.26 5.74 1.28 3.67 0.02 6.25-1.6 2.6-1.61 2.61-3.99 0.01-2.38-2.59-4.03-2.58-1.66-6.3-1.67zm27.27-2.56l4.94 0.03 11.58 10.98 0.05-10.93 5.15 0.02-0.07 16.62-4.96-0.02-11.56-10.96-0.05 10.9-5.15-0.02z"/>
+          <path class="l1" d="m228.43 169.12c-10.71-8.14-15.78-14.99-1.91-21.81 36-9.17 71.5 3.65 107.1 11.74 15.51 2.49 37.62 4.3 52.19-4.98 0.32 0.05 0.68 0.15 1.04 0.26 2.11 6.69-10.57 12.43-14.35 13.44-18.34 4.92-39.09 1.36-56.66-3.42-20.68-5.64-41.41-11.39-62.45-10.03-6.83 1.37-14.91 6.76-4.92 10.82 50.9 20.71 125.06 31.18 175.24 3.22 14.54-8.11 1.26-17.27-7.78-21.53-25.91-7.05-52.45-7.18-77.77-15.43-12.72-6.08-30.55-18.52-20.27-35.2 8.91-8.8 23.47-6.17 34.61-4.66 17.97 3.24 48.89 10.02 65.2-4.07 0.09 0 0.23 0.05 0.37 0.1-0.45 7.18-4.38 11.63-8.91 16.58-18.14 15.29-40.52 2.88-59.76-0.72-16.66-0.08-13.58 13.24-0.55 19.43 20.41 6.83 41.88 9.59 63.3 13.4 16.47 3.49 54.55 16.07 34.41 41.49-44.13 38.58-177.94 16.48-218.13-8.63z"/>
+          <path class="l2" d="m144.7 163.2c-20.71-1.23-40.12-16.01-60.59-10.6-4.28 1.7-14.29 9.77-14.24-1.58 4.2-10.99 23.18-10.69 30.1-10.52 19.24 3.04 37.05 14.08 56.94 9.68 11.84-2.62 45.93-21.82 56.17-0.31 2.15 6.53-3 9.11-6.03 5.84-4.9-3.88-11.09-3.56-16.1-3.58-15.76 3.29-30.56 12-46.25 11.07z"/>
+          <path class="l2" d="m568.38 164.91c-26.51-1.36-52.22-8.29-78.26-8.41-4.78 0.67-22.94 9.39-22.89-0.65 4.21-15.67 48.11-9.07 57.57-7.92 30.87 7.22 62.92 7.44 94.27 0.22 21.18-3.41 42.68-6.27 64.15-2.73 4.41 1.39 13.96 2.75 13.5 13.06-4.66 5.14-8.33 0.1-13.42-1.57-38.56-7.26-76.49 9.97-114.92 8z"/>
+          <path class="l3" d="m255.93 136.62c-19.2-1.81-18.75-19.55-29.43-32.92-5.22-3.86-8.93 0.74-12.7-0.52 1.71-8.78 22.63-18.44 30.12-6.41 4.23 6.8 8.29 16.14 14.02 21.91 8.76 8.8 22.02 2.76 19.29-9.66-2.12-5.74-4.14-11.35-7.21-15.94-1.46-1.16-3-1.96-3.86-2.65 1.24-1.9 10.61-1.02 13.2-0.5 18.82 5.82 12.44 26.33 25.73 36.97 3.98 3.19 8.7 2.93 14.03 3.61q0 0.27 0 0.6c-14.62 11.03-31.32 5.29-37.57-12.22q-0.35-0.07-0.64-0.14c-1.47 10.53-15.27 18.79-24.98 17.87z"/>
+          <path class="l3" d="m436.56 123.02c-1.21-4.49-1.83-7.87-2.19-8.61-4.96 0.58-17.23 5.33-19.07-1.06 0.53-5.68 10.1-8.83 14.57-9.92 2.6-0.27 2.6-0.27 2.96-0.5-0.08-12.34 0.08-26.68-7.34-36.47 5.57-1.2 13.74 1.56 17.87 5.63 6.47 6.39 6.57 17.29 7.51 29.16-4.71 0.4 43.2-14.43 90.55-12.92 3.55 0.11 2.91 3.71 0.2 4.33-19.81 2.68-39.03 5.65-58.4 9.3-12.89 3-19.27 4.08-19.77 4.95 18.27 5.73 33.03 11.9 49.46 22.7q-0.01 0.35 0.05 0.7c-9.75 10.91-28.03-2.77-36.52-7.06-7.59-3.46-16.44-8.58-24.41-9.13 0.69 9.34 3.46 19.72 15.28 14.91-8.18 12.46-25.46 10.12-30.75-6.01z"/>
+          <path class="l3" d="m203.96 134.81c-15.01-2.94-12.43-19.48-21.77-27.57-6.65-0.03-15.28 17.13-18.49 21.56-12.17 13.58-21.96-10.67-25.99-18.71-4.54-9.34-8.79-7.13-12.66-2.38-4.64 5.69-8.88 11.97-13.39 17.8-5.12 6.6-11.92 11.48-19.11 4.12-7.68-12.75-12.72-25.72-20.72-37.6-5.91-6.9-16.58 2.33-19.4 3.06-0.09-0.1-0.19-0.19-0.23-0.24 1.53-5.62 7.9-11.19 14.38-14.36 6.17-3.01 14.08-4.29 18.32 2.83l17.25 28.92c1.94 2.78 1.94 2.78 2.62 3.39 10.18 3.74 19.46-35.15 36.63-26.66 6.39 5.26 12.09 13.84 16.2 21.49 3.48 4.41 5.58 2.61 9.24-1.3 10.48-12.58 18.12-30.85 31.55-11 3.2 7.09 6.03 14.41 9.64 21.82 5.11 8.49 5.93 6.64 15.73 5.21-0.03 5.83-15.39 9.64-19.8 9.62z"/>
+          <path class="l3" d="m652.98 123.7c0.8-6.49 5.17-14.74 4.57-19-4.96-0.43-8.9 5.37-12.96 7.53-7.59 5.98-18.01 15.87-27.13 19.39-22.5 2.39 6.35-33.64-6.85-33.7-2.01 0.6-7.39 2.88-8.66 2.37 2.93-5.17 19.53-11.89 26.18-11.86 12.86 3.53-1.45 18.68 1.89 23.82 7.67 0.04 18.69-14.14 29.73-19.78 10.55-5.39 18.28-1.95 15.71 10.68-0.58 2.85-1.63 5.71-2.53 8.41-5.49 16.52 12.27 3.73 14.7 1.7 0.54 3.28-3.87 7.56-9.53 11.27-5.57 3.67-27.21 16.17-25.12-0.83z"/>
+          <path class="l3" d="m697.25 132.63q-0.2-0.15-0.41-0.23c3.76-8.1 30.29-15.2 39.94-9.5 7.67 4.52 1.63 8.62-6.04 7.52-8.61-1.23-14.97-1.94-23.92-0.38-8.38 2.41-8.38 2.41-9.57 2.59z"/>
+          <path class="l3" d="m52.03 129.67q0.2-0.15 0.41-0.23c-3.68-8.13-30.15-15.47-39.86-9.86-7.71 4.45-1.7 8.6 5.98 7.57 8.61-1.15 14.99-1.8 23.92-0.16 8.36 2.49 8.36 2.49 9.55 2.68z"/>
+          <path class="l1" d="m686.82 127.56c7.06-6.94 24.46-20.39 37.75-21.03 6.87-0.34 10.96 7.93 4.53 8.48-15.96 1.36-25.55 5.39-39.98 14.44-3.28 1.31-5.84 1.59-2.3-1.89z"/>
+          <path class="l1" d="m62.5 124.7c-6.99-7.01-24.27-20.61-37.56-21.38-6.86-0.4-11.03 7.83-4.6 8.44 15.95 1.5 25.5 5.63 39.85 14.8 3.26 1.34 5.82 1.65 2.31-1.86z"/>
+          <path fill-rule="evenodd" class="l3" d="m525.32 134.16c-26.79-4.15 3.89-24.36 12.61-29.59 14.73-7.33 30.62-16.88 47.64-16.8 18.27 6.28-7.43 32.48 6.99 33.38 2.6-0.5 5.75-2.33 8.53-2.46-0.62 4.8-18.13 12.45-23.33 14-6.69-0.22-11.64-3.02-9.37-10.77q-0.56 0.07-1.05 0.22c-14.05 7.47-26.5 11.44-42.02 12.02zm45.76-27.32c3.77-12.68-19.76-0.27-22.93 1.95-3.08 1.39-17.09 11.82-8.58 15.15 10.59 0.56 25.83-8.26 31.51-17.1z"/>
+        </svg>
+      </div>
+
+      <hr class="card-divider"/>
+
+      <label class="login-label">Password</label>
+      <div class="pw-row">
+        <input class="login-input" type="password" id="pw-input" placeholder="Enter password"/>
+        <button class="eye-btn" id="eye-btn" title="Show/hide">
+          <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="btn-row">
+        <button class="login-btn">Enter System</button>
+        <button class="settings-btn" id="settings-btn" title="Setup">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- settings panel -->
+      <div class="settings-panel" id="settings-panel">
+        <div class="settings-inner">
+  <p>Security Check</p>
+  <input class="set-input" type="password" id="current-pw-check" placeholder="Current Key" style="margin-bottom:10px; width:100%;">
+  <p>Set new password</p>
+  <div class="set-row">
+    <input class="set-input" type="password" id="new-pw" placeholder="New key"/>
+    <button class="set-save-btn" id="save-btn">Save</button>
+  </div>
+  <div class="set-saved" id="saved-msg">✓ Password updated</div>
+</div>
+
+      <p class="login-footer">Muskan-OS &nbsp;·&nbsp; Factory ERP &nbsp;·&nbsp;</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ── SPLASH ANIMATION ── */
+  const splash = document.getElementById('splash');
+  const login  = document.getElementById('login');
+  const rr     = document.getElementById('rr');
+  const corners = document.querySelectorAll('.corner');
+  const stTop  = document.getElementById('stitch-top');
+  const stBot  = document.getElementById('stitch-bot');
+  const acBar  = document.getElementById('accent-bar');
+  const logoWrap = document.getElementById('splash-logo');
+  const tag    = document.getElementById('splash-tag');
+
+  let t0 = null;
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function revealLogo(ts) {
+    if (!t0) t0 = ts;
+    const p = Math.min((ts - t0) / 1600, 1);
+    rr.setAttribute('width', 750 * ease(p));
+    if (p < 1) { requestAnimationFrame(revealLogo); return; }
+    rr.setAttribute('width', 750);
+    acBar.style.width = '120px';
+    setTimeout(() => { tag.style.opacity = '1'; }, 300);
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        splash.style.display = 'none';
+        login.style.opacity = '1';
+        login.style.pointerEvents = 'auto';
+      }, 1000);
+    }, 2000);
+  }
+
+  setTimeout(() => { corners.forEach(c => c.style.opacity = '1'); }, 200);
+  setTimeout(() => {
+    logoWrap.style.opacity = '1';
+    stTop.style.opacity = '1'; stTop.style.width = '200px';
+    stBot.style.opacity = '1'; stBot.style.width = '200px';
+    requestAnimationFrame(revealLogo);
+  }, 700);
+
+  /* ── EYE TOGGLE ── */
+  const pwInput = document.getElementById('pw-input');
+  const eyeBtn  = document.getElementById('eye-btn');
+  const eyeIcon = document.getElementById('eye-icon');
+
+  eyeBtn.addEventListener('click', () => {
+    const showing = pwInput.type === 'text';
+    pwInput.type = showing ? 'password' : 'text';
+    eyeIcon.innerHTML = showing
+      ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+      : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  });
+
+  /* ── SETTINGS PANEL ── */
+  const settingsBtn   = document.getElementById('settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const saveBtn       = document.getElementById('save-btn');
+  const savedMsg      = document.getElementById('saved-msg');
+  const newPw         = document.getElementById('new-pw');
+
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('open');
+  });
+
+saveBtn.addEventListener('click', () => {
+    const currentCheck = document.getElementById('current-pw-check').value;
+    const val = newPw.value.trim();
+    
+    // CHALLENGE: Only allow the save if the 'Current Key' matches localStorage
+    if (currentCheck === localStorage.getItem('muskan_master_pass')) {
+        if (!val) return alert("Enter a new key");
+        
+        localStorage.setItem('muskan_master_pass', val);
+        savedMsg.style.opacity = '1';
+        newPw.value = '';
+        document.getElementById('current-pw-check').value = '';
+        
+        setTimeout(() => { 
+            savedMsg.style.opacity = '0';
+            settingsPanel.classList.remove('open'); 
+        }, 2000);
+    } else {
+        alert("Current Key is incorrect. Access denied.");
+    }
+});
+
+/* ── ENTER SYSTEM LOGIC ── */
+  const loginCard = document.querySelector('.login-card');
+  const enterBtn  = document.querySelector('.login-btn');
+  const masterPass = localStorage.getItem('muskan_master_pass') || "1234";
+
+ /* ── UPDATED ENTER SYSTEM LOGIC ── */
+  enterBtn.addEventListener('click', () => {
+    const pwInput = document.getElementById('pw-input');
+    const masterPass = localStorage.getItem('muskan_master_pass') || "1234";
+
+    if (pwInput.value === masterPass) {
+      // 1. Mark the session as 'Authorized' so the Hub knows it's you
+      sessionStorage.setItem('muskan_auth', 'true');
+      
+      // 2. Trigger the "Door Opening" animation
+      loginCard.classList.add('leaving');
+      
+      // 3. Move to the Hub after the animation
+      setTimeout(() => {
+        window.location.href = 'index.html'; 
+      }, 600);
+    } else {
+      // Wrong password logic...
+      loginCard.style.animation = "shake 0.3s";
+      setTimeout(() => { loginCard.style.animation = ""; }, 300);
+    }
+  });
+</script>

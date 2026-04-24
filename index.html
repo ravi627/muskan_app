@@ -103,6 +103,15 @@
 </div>
 
 <script>
+    (function() {
+    const isAuth = sessionStorage.getItem('muskan_auth');
+    
+    if (isAuth !== 'true') {
+        // Not authorized! Kick them back to the splash screen
+        window.location.replace('muskan_splash_login_v3.html');
+    }
+})();
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
