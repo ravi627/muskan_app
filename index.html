@@ -112,6 +112,11 @@
     }
 })();
 
+    function logOut() {
+    sessionStorage.removeItem('muskan_auth'); // Delete the badge
+    window.location.replace('muskan_splash_login_v3.html'); // Back to start
+}
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
