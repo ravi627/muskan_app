@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Muskan Fashion | Command Center</title>
+    <title>Muskan-OS</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F0EAE1">
@@ -37,7 +37,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     z-index: 10;
-    transition: opacity 1s ease;
+    transition: opacity 1.5s ease;
   }
 
   .corner {
@@ -288,6 +288,21 @@
     color: rgba(44,46,53,0.3);
     letter-spacing: 3px; text-transform: uppercase;
   }
+
+    .os-footer {
+    position: absolute;
+    bottom: 24px; /* Matches the 24px spacing of your corners */
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(44, 46, 53, 0.25);
+    opacity: 0; /* Start hidden for the animation */
+    transition: opacity 1s ease;
+    z-index: 100;
+}
 </style>
  </head>
 
@@ -327,7 +342,8 @@
 
     <div id="accent-bar"></div>
     <div class="stitch-line" id="stitch-bot" style="margin-top:14px;"></div>
-    <div id="splash-tag">Muskan Fashion &nbsp;·&nbsp; Command Center</div>
+    <div id="splash-tag">&nbsp;.&nbsp;Muskan Fashion &nbsp;|&nbsp; NTM &nbsp;.&nbsp; </div>
+      <div class="os-footer" id="footer-branding">Powered by Muskan-OS</div>
   </div>
 
   <!-- LOGIN -->
@@ -429,7 +445,7 @@
         login.style.opacity = '1';
         login.style.pointerEvents = 'auto';
       }, 1000);
-    }, 2000);
+    }, 3000);
   }
 
   setTimeout(() => { corners.forEach(c => c.style.opacity = '1'); }, 200);
@@ -439,7 +455,9 @@
     stBot.style.opacity = '1'; stBot.style.width = '200px';
     requestAnimationFrame(revealLogo);
   }, 700);
-
+setTimeout(() => {
+    document.getElementById('footer-branding').style.opacity = '1';
+}, 1200);
   /* ── EYE TOGGLE ── */
   const pwInput = document.getElementById('pw-input');
   const eyeBtn  = document.getElementById('eye-btn');
@@ -513,6 +531,13 @@ saveBtn.addEventListener('click', () => {
       setTimeout(() => { loginCard.style.animation = ""; }, 300);
     }
   });
+
+   pwInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Stop page from refreshing
+        enterBtn.click();      // Trigger the same logic as clicking the button
+    }
+}); 
 </script>
  </body>
 </html>
