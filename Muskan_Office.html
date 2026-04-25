@@ -243,16 +243,40 @@
         syncToCloud();
     }
 
-    async function syncToCloud() {
-        if (!config.cloudUrl) return;
-        const status = document.getElementById('syncStatus'); status.innerText = "⏳ Syncing...";
-        const cloudExport = stockData.map(i => ({ date: i.date.toString().split('T')[0], challan: i.challan, type: i.type, qty: i.type === 'IN' ? i.qty : -i.qty, note: i.note || "" }));
-        cloudExport.push({ date: "INITIAL", challan: "OPENING", type: "BASE", qty: config.opening, note: "" });
-        try {
-            await fetch(config.cloudUrl, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SYNC_STOCK", logs: cloudExport }) });
-            status.innerText = "✅ Cloud Synced: " + new Date().toLocaleTimeString();
-        } catch (e) { status.innerText = "❌ Sync Failed"; }
+  async function syncToCloud() {
+    if (!config.cloudUrl) return;
+    const status = document.getElementById('syncStatus'); 
+    status.innerText = "⏳ Syncing...";
+
+    // This part creates the list of rows to send
+    const cloudExport = stockData.map(i => {
+        // Safety check for date: ensure it's a string before splitting
+        let cleanDate = i.date ? i.date.toString().split('T')[0] : "";
+        
+        return { 
+            date: cleanDate, 
+            challan: i.challan || "", 
+            type: i.type || "", 
+            qty: i.type === 'IN' ? Number(i.qty) : -Number(i.qty), 
+            note: i.note || "" 
+        };
+    });
+
+    // Add the opening row
+    cloudExport.push({ date: "INITIAL", challan: "OPENING", type: "BASE", qty: Number(config.opening), note: "" });
+
+    try {
+        await fetch(config.cloudUrl, { 
+            method: "POST", 
+            mode: "no-cors", // Try adding this if you haven't, it helps with Apps Script
+            headers: { "Content-Type": "text/plain" }, 
+            body: JSON.stringify({ action: "SYNC_STOCK", logs: cloudExport }) 
+        });
+        status.innerText = "✅ Cloud Synced: " + new Date().toLocaleTimeString();
+    } catch (e) { 
+        status.innerText = "❌ Sync Failed"; 
     }
+}
 
     async function recoverFromCloud() {
         if (!config.cloudUrl) return alert("Cloud URL not set.");
