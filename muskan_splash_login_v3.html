@@ -2,13 +2,16 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  #root {
+ #root {
     width: 100%;
-    min-height: 620px;
+    height: 100vh; /* Changed from min-height: 620px */
     font-family: 'Inter', sans-serif;
     position: relative;
     overflow: hidden;
     background: #F0EAE1;
+    display: flex;        /* Centering helpers */
+    align-items: center;  /* Centers logo/card vertically */
+    justify-content: center;
   }
 
   #root::before {
@@ -56,10 +59,13 @@
 }
 
   #splash-logo {
-    width: 85%; max-width: 420px;
-    margin: 16px 0;
-    opacity: 0; transition: opacity 0.2s ease;
+    width: 90%; 
+    max-width: 650px; /* Increased from 420px for better desktop presence */
+    margin: 20px 0;
+    opacity: 0; 
+    transition: opacity 0.2s ease;
   }
+ 
   #splash-logo svg { width: 100%; height: auto; }
 
   #splash-tag {
@@ -91,9 +97,16 @@
 }
 
 .login-card {
-    /* ... existing styles ... */
+    width: 100%;
+    max-width: 440px; /* Increased from 380px to feel more substantial */
+    background: #fff;
+    border: 2px solid #2c2e35;
+    border-radius: 12px;
+    padding: 42px 38px; /* More breathing room inside the card */
+    position: relative;
+    box-shadow: 0 15px 50px rgba(44,46,53,0.1);
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-}
+  }
 
 /* The "Physical Door Opening" effect */
 .login-card.leaving {

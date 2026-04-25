@@ -24,7 +24,20 @@
         body, html { margin: 0; padding: 0; min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
         /* HUB SCREEN: Updated to center content properly on all screens */
-        #hub { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; transition: 0.5s; }
+       #hub { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    transition: opacity 0.5s ease-in; /* Smooth fade-in */
+    
+    /* ADD THIS LINE: It will be invisible on load */
+    opacity: 0; 
+    pointer-events: none;
+}
         
         /* LOGO: Now scales based on screen width */
         .logo-container { width: 95%; max-width: 450px; margin-bottom: 40px; }
@@ -113,8 +126,15 @@
     const isAuth = sessionStorage.getItem('muskan_auth');
     
     if (isAuth !== 'true') {
-        // Not authorized! Kick them back to the splash screen
+        // Not authorized: Kick them back
         window.location.replace('muskan_splash_login_v3.html');
+    } else {
+        // Authorized: Make the Hub visible after a tiny delay
+        window.onload = () => {
+            const hub = document.getElementById('hub');
+            hub.style.opacity = '1';
+            hub.style.pointerEvents = 'auto';
+        };
     }
 })();
 

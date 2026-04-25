@@ -156,7 +156,16 @@
     let currentBag = [];
     let hubConfig = JSON.parse(localStorage.getItem('msk_v13_config')) || { cloudUrl: "" };
 
-    function openSettings() {
+    (function() {
+    // Check if the 'Authorized' badge exists for this session
+    if (sessionStorage.getItem('muskan_auth') !== 'true') {
+        // No badge found! Force them back to the entrance immediately
+        window.location.replace('muskan_splash_login_v3.html');
+    }
+})();
+
+
+     function openSettings() {
         document.getElementById('setCloudUrl').value = hubConfig.cloudUrl;
         document.getElementById('setWaNum').value = localStorage.getItem('muskan_wa_num') || "";
         document.getElementById('settingsModal').style.display = 'flex';
@@ -382,7 +391,16 @@
     let currentBag = [];
     let hubConfig = JSON.parse(localStorage.getItem('msk_v13_config')) || { cloudUrl: "" };
 
-    function openSettings() {
+   (function() {
+    // Check if the 'Authorized' badge exists for this session
+    if (sessionStorage.getItem('muskan_auth') !== 'true') {
+        // No badge found! Force them back to the entrance immediately
+        window.location.replace('muskan_splash_login_v3.html');
+    }
+})(); 
+
+
+function openSettings() {
         document.getElementById('setCloudUrl').value = hubConfig.cloudUrl;
         document.getElementById('setWaNum').value = localStorage.getItem('muskan_wa_num') || "";
         document.getElementById('settingsModal').style.display = 'flex';
