@@ -538,9 +538,14 @@ saveBtn.addEventListener('click', () => {
     const currentCheck = document.getElementById('current-pw-check').value;
     const val = newPw.value.trim();
     
-    // CHALLENGE: Only allow the save if the 'Current Key' matches localStorage
-    if (currentCheck === localStorage.getItem('muskan_master_pass')) {
-        if (!val) return alert("Enter a new key");
+    // FIX: Fallback to "1234" if no password has ever been saved
+    const savedPass = localStorage.getItem('muskan_master_pass') || "1234";
+
+    if (currentCheck === savedPass) {
+        if (!val) {
+            alert("Please enter a new key");
+            return;
+        }
         
         localStorage.setItem('muskan_master_pass', val);
         savedMsg.style.opacity = '1';
@@ -555,7 +560,7 @@ saveBtn.addEventListener('click', () => {
         alert("Current Key is incorrect. Access denied.");
     }
 });
-
+    
 /* ── ENTER SYSTEM LOGIC ── */
   const loginCard = document.querySelector('.login-card');
   const enterBtn  = document.querySelector('.login-btn');
