@@ -76,12 +76,27 @@
  
   #splash-logo svg { width: 100%; height: auto; }
 
-  #splash-tag {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 4px; text-transform: uppercase;
-    color: #2c2e35; opacity: 0; margin-top: 4px;
+#splash-tag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* Adds clean space around the dots */
+    font-size: 10px; 
+    font-weight: 700;
+    letter-spacing: 4px; 
+    text-transform: uppercase;
+    color: #2c2e35; 
+    opacity: 0; 
+    margin-top: 10px;
     transition: opacity 0.6s ease;
-  }
+}
+
+.big-dot {
+    font-size: 24px; /* Makes the dot significantly larger */
+    line-height: 0;  /* Prevents the big dot from pushing the text down */
+    color: #ffc734;  /* Optional: Use your accent gold for the dots to make it premium */
+    vertical-align: middle;
+}
 
   #accent-bar {
     width: 0; height: 3px;
@@ -282,26 +297,57 @@
     transition: opacity 0.3s ease;
   }
 
-  .login-footer {
-    text-align: center; margin-top: 20px;
-    font-size: 9px; font-weight: 700;
-    color: rgba(44,46,53,0.3);
-    letter-spacing: 3px; text-transform: uppercase;
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border: 2px solid #2c2e35;
+    border-radius: 12px;
+    padding: 42px 38px 24px; /* Balanced padding */
+    position: relative;
+    box-shadow: 0 15px 50px rgba(44,46,53,0.1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+    
+    /* Force children to stack vertically with spacing */
+    display: flex;
+    flex-direction: column;
   }
 
-    .os-footer {
-    position: absolute;
-    bottom: 24px; /* Matches the 24px spacing of your corners */
-    width: 100%;
+.card-footer-info {
+    margin-top: 30px; /* Gap from buttons */
+    padding-top: 15px;
+    border-top: 1px dashed rgba(44,46,53,0.15); /* Stitch line */
     text-align: center;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(44, 46, 53, 0.25);
-    opacity: 0; /* Start hidden for the animation */
+    color: rgba(44,46,53,0.4);
+    width: 100%;
+  }
+.os-footer {
+    position: absolute;
+    bottom: 30px; /* Sits slightly above the bottom edge */
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(44, 46, 53, 0.3);
+    z-index: 100; /* Higher than #splash and #login */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    opacity: 0; 
     transition: opacity 1s ease;
-    z-index: 100;
+}
+
+.big-dot {
+    font-size: 18px;
+    color: #ffc734; /* Your brand gold */
+    line-height: 0;
 }
 </style>
  </head>
@@ -342,8 +388,9 @@
 
     <div id="accent-bar"></div>
     <div class="stitch-line" id="stitch-bot" style="margin-top:14px;"></div>
-    <div id="splash-tag">&nbsp;.&nbsp;Muskan Fashion &nbsp;|&nbsp; NTM &nbsp;.&nbsp; </div>
-      <div class="os-footer" id="footer-branding">Powered by Muskan-OS</div>
+    <div id="splash-tag">
+    <span class="big-dot">&bull;</span> Muskan Fashion &nbsp;|&nbsp; NTM <span class="big-dot">&bull;</span>
+</div>
   </div>
 
   <!-- LOGIN -->
@@ -407,13 +454,18 @@
     <button class="set-save-btn" id="save-btn">Save</button>
   </div>
   <div class="set-saved" id="saved-msg">✓ Password updated</div>
-</div>
-
-      <p class="login-footer">Muskan-OS &nbsp;·&nbsp; Factory ERP &nbsp;·&nbsp;</p>
+</div>   
     </div>
+          <div class="card-footer-info">
+       <span class="big-dot">&bull;</span> Muskan-OS &nbsp;|&nbsp; ERP &nbsp;|;&nbsp; NTM <span class="big-dot">&bull;</span>
+      </div>
+
+    </div> </div> <div class="os-footer" id="footer-branding">
+    <span class="big-dot">&bull;</span> Powered by Muskan-OS <span class="big-dot">&bull;</span>
   </div>
 
-</div>
+</div
+  </div>
 
 <script>
   /* ── SPLASH ANIMATION ── */
