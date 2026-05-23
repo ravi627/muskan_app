@@ -276,18 +276,53 @@
 }
     async function recoverFromCloud() {
         if (!config.cloudUrl) return alert("Cloud URL not set.");
-        const btn = document.querySelector('.recover-btn'); btn.innerText = "⏳ RECOVERING...";
+        const btn = document.querySelector('.recover-btn'); 
+        btn.innerText = "⏳ RECOVERING...";
         try {
             const response = await fetch(config.cloudUrl + "?action=GET_OFFICE");
             const json = await response.json();
             const data = json.logs;
-            stockData = data.filter(i => i.challan !== "OPENING").map(i => ({ id: Date.now() + Math.random(), date: i.date.toString().split('T')[0], challan: i.challan, type: parseFloat(i.qty) > 0 ? "IN" : "OUT", qty: Math.abs(parseFloat(i.qty)), note: i.note || "" }));
+            
+            // 1. Process the incoming logs
+            stockData = data.filter(i => i.challan !== "OPENING").map(i => ({ 
+                id: Date.now() + Math.random(), 
+                date: i.date.toString().split('T')[0], 
+                challan: i.challan, 
+                type: parseFloat(i.qty) > 0 ? "IN" : "OUT", 
+                qty: Math.abs(parseFloat(i.qty)), 
+                note: i.note || "" 
+            }));
+            
+            // 2. Extract and Set Opening Balance
             const openRow = data.find(i => i.challan === "OPENING");
             if (openRow) config.opening = parseFloat(openRow.qty);
+
+            // 3. NEW: Auto-Sync Challan Numbers!
+            let maxIn = 0;
+            let maxOut = 0;
+
+            stockData.forEach(item => {
+                // Remove all non-numeric characters to get just the number
+                let num = parseInt(item.challan.replace(/\D/g, ''));
+                if (!isNaN(num)) {
+                    if (item.type === 'IN' && num > maxIn) maxIn = num;
+                    if (item.type === 'OUT' && num > maxOut) maxOut = num;
+                }
+            });
+
+            // If we found numbers in the cloud, update the config to be the next number
+            // If nothing was found, it keeps the current config setting.
+            if (maxIn > 0) config.inNo = maxIn + 1;
+            if (maxOut > 0) config.outNo = maxOut + 1;
+
+            // 4. Save and Update UI
             saveData(); 
             btn.innerText = "✅ RECOVERY SUCCESS";
             setTimeout(() => btn.innerText = "⚠️ RECOVER FROM CLOUD", 2000);
-        } catch (e) { btn.innerText = "❌ FAILED"; }
+        } catch (e) { 
+            console.error(e);
+            btn.innerText = "❌ FAILED"; 
+        }
     }
 
     function render() {
